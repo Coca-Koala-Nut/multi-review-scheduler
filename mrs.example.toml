@@ -1,0 +1,44 @@
+# multi-review-scheduler 配置示例
+#
+# 用法：
+#   1. 复制到工程根的 pyproject.toml 末尾
+#        cp mrs.example.toml pyproject.toml  # 或追加
+#   2. 或跑 `multi-review-scheduler --ui` 在 TUI 里填，保存即生效
+#   3. CLI 显式参数 > 本配置 > 内置默认
+
+[tool.mrs]
+# 必填：默认审阅/分析目标。运行时可用 --target 覆盖。
+default_target = ""
+
+# 默认 workflow；可用 --workflow 覆盖（ab-review / rtl-analyze）
+default_workflow = "ab-review"
+
+# ab-review B 角色 settings.json；推断 B 模型用
+settings_b = "~/.claude/settings-db-kimi.json"
+# ab-review A 角色 settings.json；推断 A 模型用
+settings_a = "~/.claude/settings-ds.json"
+
+# A/B 审阅最大轮次（1-10）；可用 --max-rounds 覆盖
+max_rounds = 3
+
+# B/A 角色额外提示，拼到 prompt 后；可用 --b-extra / --a-extra 覆盖
+b_extra = ""
+a_extra = ""
+
+# 工程根：搜索配套 RTL 源的范围。留空自动识别（cwd 优先，无 pyproject 时按
+# git/CLAUDE.md/.ab-review/.git 上溯）。可用 --project-root 显式覆盖。
+project_root = ""
+
+# 文档分类：auto=按文件名自动；with-code=强制当作文档+配套代码审；
+# standalone=跳过配对（学习手册/教程）。可用 --doc-class 覆盖。
+doc_class = "auto"
+
+# 单步超时（分钟）；可用 --timeout 覆盖
+timeout_min = 30
+
+# 日志落盘路径；可用 --log-path 覆盖
+log_path = ".ab-review/run.log"
+
+# pre-check 搜索深度：doc-with-code 找配套 RTL 源时的最大目录层数。
+# SoC IP 经常深达 9-12 层，默认 15 够用。可用 --precheck-max-depth 覆盖。
+precheck_max_depth = 15

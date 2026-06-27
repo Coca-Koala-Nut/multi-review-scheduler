@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mrs-skill-rtl-analyze"
+version = "0.1.0"
+description = "rtl-analyze skill for multi-review-scheduler (RTL code analysis)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Coca-Koala-Nut" }]
+keywords = ["claude", "skill", "rtl-analyze", "multi-review-scheduler"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Plugins",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development",
+]
+dependencies = []
+
+[project.entry-points."multi_review_scheduler.skills"]
+rtl-analyze = "mrs_skill_rtl_analyze:install"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mrs_skill_rtl_analyze = [
+    "SKILL.md",
+    "README.md",
+]

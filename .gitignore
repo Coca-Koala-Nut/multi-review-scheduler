@@ -1,0 +1,49 @@
+# Python 构建产物
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+*.whl
+*.tar.gz
+
+# 运行时产物（每台机器独立，不入仓）
+.ab-review/
+.workflow/
+
+# 环境 / 虚拟环境
+.venv/
+venv/
+env/
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试 / 覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# pyproject.toml **不**忽略 —— [build-system] / [project] / [optional-dependencies]
+# / [tool.setuptools.*] 都在仓库里。但用户跑 `multi-review-scheduler --ui` 后，
+# pyproject.toml 末尾会被自动追加一段 [tool.mrs]（用户本地的 default_target /
+# settings_b/a 等，存的是用户工程的状态，**不**应该提交）。
+#
+# 正确做法：**不**忽略 pyproject.toml，但提交前 strip [tool.mrs] 段。
+# 推荐用 .githooks/pre-commit 自动检查（见 .githooks/pre-commit 注释）。
+
+# 系统 / 临时
+*.tmp
+*.bak
+*.orig
+
+# git hooks（启用：git config core.hooksPath .githooks）
+# 不要忽略它本身 —— 入仓后 clone 的人才能本地启用
+# .githooks/

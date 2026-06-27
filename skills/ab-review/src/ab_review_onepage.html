@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ab-review skill — A/B 双角色多轮审阅 · 一页纸说明</title>
+<style>
+  :root{
+    --ink:#1f2328; --sub:#57606a; --line:#d0d7de; --bg:#f6f8fa;
+    --b:#0969da;   /* B 审阅者 蓝 */
+    --a:#1a7f37;   /* A 修改者 绿 */
+    --hi:#bf8700;  /* 亮点 金 */
+    --stop:#cf222e;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       margin:0;padding:28px 40px;color:var(--ink);line-height:1.5;font-size:14px;
+       max-width:1100px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px;}
+  h1 .tag{font-size:13px;color:var(--sub);font-weight:400;margin-left:10px;}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  h2{font-size:16px;margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+  h2 .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;
+        font-size:12px;text-align:center;line-height:22px;font-weight:600;}
+  .grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 15px;}
+  .card h3{margin:0 0 6px;font-size:13.5px;color:var(--ink);}
+  ul{margin:4px 0 0;padding-left:18px;}
+  li{margin:2px 0;}
+  code{background:#eff1f3;padding:.1em .35em;border-radius:4px;font-size:12.5px;
+       font-family:"SFMono-Regular",Consolas,Menlo,monospace;}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-weight:600;color:#fff;}
+  .b{background:var(--b);} .a{background:var(--a);}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px;}
+  th,td{border:1px solid var(--line);padding:4px 7px;text-align:left;vertical-align:top;}
+  th{background:#fff;}
+  .hl{border-left:4px solid var(--hi);background:#fffdf3;}
+  .hl h3 .star{color:var(--hi);}
+  .foot{margin-top:18px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--sub);}
+  svg{display:block;margin:4px auto 0;}
+  .kbd{font-family:monospace;background:#eff1f3;border:1px solid var(--line);border-bottom-width:2px;
+       border-radius:4px;padding:1px 6px;font-size:12px;}
+  .verdict{color:var(--stop);font-weight:700;}
+  .skill-badge{display:inline-block;background:var(--ink);color:#fff;font-size:11px;font-weight:700;
+       letter-spacing:.5px;padding:2px 9px;border-radius:5px;vertical-align:middle;margin-right:8px;}
+</style>
+</head>
+<body>
+
+<h1><span class="skill-badge">SKILL</span>ab-review <span class="tag">A/B 双角色多轮审阅-修改 · 自动闭环</span></h1>
+<p class="lead">Claude Code skill：A=执行修改，B=审阅挑刺。两者交替推进，每条意见都带依据链，直到 B 终审通过或达 3 轮上限。支持单进程自闭环与双终端隔离两种模式。触发 <code>/ab-review &lt;路径&gt;</code> 或自然语言含"AB审阅"；可被其他 skill 经 <code>Skill()</code> 调用。</p>
+
+<h2><span class="n">1</span> 流程：B 审阅 → A 决策修改 → 乒乓至终审</h2>
+<div class="grid">
+  <div class="card">
+    <svg width="560" height="300" viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L7,4 L0,8 z" fill="#57606a"/>
+        </marker>
+        <marker id="arrR" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L7,4 L0,8 z" fill="#cf222e"/>
+        </marker>
+      </defs>
+      <!-- 轮次大框 -->
+      <rect x="14" y="10" width="532" height="280" rx="8" fill="none" stroke="#d0d7de" stroke-dasharray="4 3"/>
+      <text x="24" y="26" font-size="11" fill="#8c959f">第 N 轮（最多 3 轮）</text>
+
+      <!-- B 审阅节点 -->
+      <rect x="40" y="44" width="190" height="92" rx="8" fill="#ddf4ff" stroke="#0969da"/>
+      <text x="135" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#0969da">B 审阅者</text>
+      <text x="135" y="84" text-anchor="middle" font-size="11" fill="#1f2328">读 target 文档</text>
+      <text x="135" y="100" text-anchor="middle" font-size="11" fill="#1f2328">标准按对象类型选</text>
+      <text x="135" y="116" text-anchor="middle" font-size="11" fill="#1f2328">+ rtl-analyze Mode C/B</text>
+      <text x="135" y="132" text-anchor="middle" font-size="11" fill="#1f2328">→ b-round-N.md</text>
+
+      <!-- A 决策节点 -->
+      <rect x="330" y="44" width="190" height="92" rx="8" fill="#dafbe1" stroke="#1a7f37"/>
+      <text x="425" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#1a7f37">A 修改者</text>
+      <text x="425" y="84" text-anchor="middle" font-size="11" fill="#1f2328">读 b-round-N.md</text>
+      <text x="425" y="100" text-anchor="middle" font-size="11" fill="#1f2328">逐条 Grep/Read 核对</text>
+      <text x="425" y="116" text-anchor="middle" font-size="11" fill="#1f2328">改 | 拒绝 | 待验证</text>
+      <text x="425" y="132" text-anchor="middle" font-size="11" fill="#1f2328">→ a-round-N.md</text>
+
+      <!-- B→A 箭头 -->
+      <line x1="230" y1="90" x2="324" y2="90" stroke="#57606a" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="277" y="83" text-anchor="middle" font-size="10" fill="#57606a">意见</text>
+
+      <!-- 决策菱形 -->
+      <polygon points="425,150 470,180 425,210 380,180" fill="#fffdf3" stroke="#bf8700"/>
+      <text x="425" y="184" text-anchor="middle" font-size="10.5" fill="#1f2328">B 还有</text>
+      <text x="425" y="197" text-anchor="middle" font-size="10.5" fill="#1f2328">意见?</text>
+
+      <!-- A→决策 -->
+      <line x1="425" y1="136" x2="425" y2="150" stroke="#57606a" stroke-width="1.5"/>
+
+      <!-- 是 → 下一轮（回 B，下移绕回） -->
+      <path d="M 380,180 L 135,180 L 135,150" fill="none" stroke="#57606a" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr)"/>
+      <text x="257" y="173" text-anchor="middle" font-size="10" fill="#57606a">是 → 第 N+1 轮（turn=b, round+1）</text>
+
+      <!-- 否 → 终审通过 -->
+      <line x1="425" y1="210" x2="425" y2="244" stroke="#cf222e" stroke-width="1.8" marker-end="url(#arrR)"/>
+      <text x="440" y="230" font-size="11" fill="#cf222e" font-weight="700">否</text>
+      <rect x="345" y="248" width="160" height="34" rx="8" fill="#ffebe9" stroke="#cf222e"/>
+      <text x="425" y="269" text-anchor="middle" font-size="12.5" font-weight="700" fill="#cf222e">终审通过 · 自动停止</text>
+
+      <!-- 无依据拒绝 旁注 -->
+      <text x="135" y="265" text-anchor="middle" font-size="10" fill="#1a7f37">A 可拒绝无依据意见</text>
+      <text x="135" y="278" text-anchor="middle" font-size="10" fill="#1a7f37">（B 下轮可反驳）</text>
+    </svg>
+  </div>
+  <div class="card">
+    <h3>每轮两个角色的产出</h3>
+    <p style="margin:4px 0;"><span class="pill b">B</span> 在 <code>b-round-N.md</code> 每条意见指出：<b>位置 / 理解障碍原因 / 修改方向</b>。已说清楚处不得强行找茬。</p>
+    <p style="margin:10px 0 4px;"><span class="pill a">A</span> 在 <code>a-round-N.md</code> 对每条做<b>可审计决策</b>：</p>
+    <table>
+      <tr><th>判定</th><th>条件</th><th>动作</th></tr>
+      <tr><td><b>改</b></td><td>依据非空（命令+行号）</td><td>in-place Edit</td></tr>
+      <tr><td><b>拒绝</b></td><td>B 无代码/文档支撑</td><td>注明理由，B 下轮可反驳</td></tr>
+      <tr><td><b>待验证</b></td><td>有道理但无法核实</td><td>标 <code>【待验证】</code> 交还</td></tr>
+    </table>
+    <p style="margin:10px 0 0;font-size:12px;color:var(--sub);">依据链让"A 是否真核对"可检查——"Grep rx_data line 87"是真核实，"经检查无误"是糊弄。</p>
+  </div>
+</div>
+
+<h2><span class="n">2</span> 两种运行模式</h2>
+<div class="grid">
+  <div class="card">
+    <h3>默认模式 · 单进程自闭环</h3>
+    <p style="margin:4px 0;">一个 Claude 在一次回答内演完 A/B，跑满 3 轮。</p>
+    <ul>
+      <li>触发：<span class="kbd">/ab-review doc.md</span> 或自然语言"AB审阅：对 doc.md…"</li>
+      <li>快、零配置；但 A/B 同一上下文，有"自己放过自己"风险</li>
+    </ul>
+  </div>
+  <div class="card" style="border-color:var(--hi);background:#fffdf3;">
+    <h3><span class="star">★</span> --split 双终端模式 · 真隔离</h3>
+    <p style="margin:4px 0;">A/B 跑两个终端（可不同模型），靠标志文件 + 定时轮询<b>自动乒乓，无需人工中转</b>。</p>
+    <ul>
+      <li>B 端：<span class="kbd">/ab-review doc.md --split --role b --init</span> 后挂 <span class="kbd">/loop 2m</span></li>
+      <li>A 端：<span class="kbd">/loop 2m /ab-review doc.md --split --role a</span></li>
+      <li>协调：<code>.ab-review/state.json</code>，<code>turn</code> 字段(b/a/done)即互斥锁</li>
+      <li>每次唤醒幂等单步：该自己则干一步，否则速退不空耗</li>
+    </ul>
+  </div>
+</div>
+
+<h2><span class="n">3</span> 双终端协调机制（--split 核心）</h2>
+<div class="card">
+  <svg width="980" height="115" viewBox="0 0 980 115" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8 z" fill="#57606a"/></marker></defs>
+    <!-- state.json 中枢 -->
+    <rect x="400" y="20" width="180" height="75" rx="8" fill="#fffdf3" stroke="#bf8700" stroke-width="1.5"/>
+    <text x="490" y="40" text-anchor="middle" font-size="12.5" font-weight="700" fill="#bf8700">.ab-review/state.json</text>
+    <text x="490" y="58" text-anchor="middle" font-size="11" fill="#1f2328">turn: b → a → b → done</text>
+    <text x="490" y="74" text-anchor="middle" font-size="11" fill="#1f2328">round · verdict · max_rounds</text>
+    <text x="490" y="88" text-anchor="middle" font-size="10" fill="#8c959f">单一真相源 · flock+os.replace 原子写</text>
+
+    <!-- B 终端 -->
+    <rect x="30" y="30" width="150" height="55" rx="8" fill="#ddf4ff" stroke="#0969da"/>
+    <text x="105" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#0969da">B 终端（轮询）</text>
+    <text x="105" y="68" text-anchor="middle" font-size="10.5" fill="#1f2328">claim b → act?</text>
+    <text x="105" y="80" text-anchor="middle" font-size="10.5" fill="#1f2328">审阅 → handoff/finish</text>
+
+    <!-- A 终端 -->
+    <rect x="800" y="30" width="150" height="55" rx="8" fill="#dafbe1" stroke="#1a7f37"/>
+    <text x="875" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#1a7f37">A 终端（轮询）</text>
+    <text x="875" y="68" text-anchor="middle" font-size="10.5" fill="#1f2328">claim a → act?</text>
+    <text x="875" y="80" text-anchor="middle" font-size="10.5" fill="#1f2328">修改 → handoff</text>
+
+    <!-- 双向箭头 -->
+    <line x1="180" y1="50" x2="395" y2="50" stroke="#57606a" stroke-width="1.5" marker-end="url(#a2)"/>
+    <line x1="395" y1="72" x2="180" y2="72" stroke="#57606a" stroke-width="1.5" marker-end="url(#a2)" stroke-dasharray="4 3"/>
+    <line x1="580" y1="50" x2="795" y2="50" stroke="#57606a" stroke-width="1.5" marker-end="url(#a2)"/>
+    <line x1="795" y1="72" x2="580" y2="72" stroke="#57606a" stroke-width="1.5" marker-end="url(#a2)" stroke-dasharray="4 3"/>
+
+    <text x="285" y="44" text-anchor="middle" font-size="9.5" fill="#57606a">读/写 turn</text>
+    <text x="690" y="44" text-anchor="middle" font-size="9.5" fill="#57606a">读/写 turn</text>
+    <text x="490" y="110" text-anchor="middle" font-size="10" fill="#8c959f">/loop 每 2 分钟唤醒两端 · 文件即通信通道 · 零人工中转</text>
+  </svg>
+</div>
+
+<h2><span class="n">4</span> 亮点</h2>
+<div class="grid" style="grid-template-columns:repeat(2,1fr);">
+  <div class="card hl"><h3><span class="star">★</span> 全自动闭环，零人工中转</h3>
+    <p style="margin:4px 0;">默认模式一次回答跑满 3 轮；--split 模式两端 <code>/loop</code> 自动乒乓，B 写文件 A 自动读到，无需复制粘贴传话。</p></div>
+  <div class="card hl"><h3><span class="star">★</span> A/B 真隔离，可用不同模型</h3>
+    <p style="margin:4px 0;">--split 让 A、B 跑独立进程独立上下文，B 不知 A 思路，A 无法"自己放过自己"。B 端可挂更强模型审，隔离强度远超单进程。</p></div>
+  <div class="card hl"><h3><span class="star">★</span> 可审计决策，判断过程可查</h3>
+    <p style="margin:4px 0;">每条意见必带"依据/判定/理由"，依据必须可复现（命令+行号）。A 是否真核对一看便知，B 可对"拒绝"反驳、对"待验证"补证。</p></div>
+  <div class="card hl"><h3><span class="star">★</span> 事实优先，拒绝权对等</h3>
+    <p style="margin:4px 0;">A 只能依据代码/文档已有事实改，不得臆造；B 无依据时 A 有权拒绝。双方都有约束：B 不得强行找茬，A 不得无依据盲改。</p></div>
+  <div class="card hl"><h3><span class="star">★</span> RTL 深度叠加 rtl-analyze</h3>
+    <p style="margin:4px 0;">标准按 <code>object_type</code> 分流：doc→6 默认+5 硬件专项、Mode C；rtl→6 代码替代+5 代码专项、Mode B。Mode B/C 报告先落 <code>modeB-round-N.md</code> 再摘要入 b-round，整份报告不进对话，防多轮遗忘。</p></div>
+  <div class="card hl"><h3><span class="star">★</span> state 机固化，流程可回归</h3>
+    <p style="margin:4px 0;"><code>_ab_state.py</code> 收敛原子写（flock+os.replace），<code>turn</code> 即互斥锁；配套 25 项断言自测脚本，改 state 逻辑后一键回归。</p></div>
+</div>
+
+<div class="foot">
+  <b>触发</b>：<span class="kbd">/ab-review &lt;文档或RTL路径&gt;</span> &nbsp;|&nbsp; <b>双终端</b>：<span class="kbd">--split --role a|b [--init]</span> &nbsp;|&nbsp;
+  <b>终审信号</b>：<span class="verdict">**终审通过**</span> &nbsp;|&nbsp; <b>上限</b>：3 轮，到顶输出遗留清单 &nbsp;|&nbsp;
+  skill 文件：<code>~/.claude/skills/ab-review/SKILL.md</code> + <code>scripts/_ab_state.py</code> + <code>scripts/_ab_split_selftest.py</code>
+</div>
+
+</body>
+</html>

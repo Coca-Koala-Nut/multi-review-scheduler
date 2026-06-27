@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-review-scheduler"
+version = "0.1.0"
+description = "Skill workflow scheduling framework for Claude Code CLI"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Coca-Koala-Nut" }]
+keywords = ["claude", "workflow", "review", "rtl"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+
+[project.optional-dependencies]
+ab-review = ["mrs-skill-ab-review>=0.1,<1.0"]
+rtl       = ["mrs-skill-rtl-analyze>=0.1,<1.0"]
+all       = [
+    "mrs-skill-ab-review>=0.1,<1.0",
+    "mrs-skill-rtl-analyze>=0.1,<1.0",
+]
+tui       = [
+    "textual>=0.50,<1.0",
+    "tomlkit>=0.12,<1.0",
+]
+full      = [
+    "mrs-skill-ab-review>=0.1,<1.0",
+    "mrs-skill-rtl-analyze>=0.1,<1.0",
+    "textual>=0.50,<1.0",
+    "tomlkit>=0.12,<1.0",
+]
+
+[project.urls]
+Homepage      = "https://github.com/Coca-Koala-Nut/multi-review-scheduler"
+"Skill: ab-review"  = "https://pypi.org/project/mrs-skill-ab-review/"
+"Skill: rtl"        = "https://pypi.org/project/mrs-skill-rtl-analyze/"
+
+[project.scripts]
+multi-review-scheduler = "multi_review_scheduler:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["multi_review_scheduler*", "drivers*", "engine*"]
+exclude = ["skills*", ".ab-review*", ".workflow*", "tests*", "IPs*", "SB*", "__pycache__*"]
+
+[tool.setuptools.package-data]
+multi_review_scheduler = ["py.typed"]
+
+# [tool.mrs] 段不在源码仓库里出现 —— 那是用户本地配置。
+# 示例见项目根 mrs.example.toml；用户用 `multi-review-scheduler --ui` 生成，
+# 或手动 cp mrs.example.toml pyproject.toml 并在末尾追加 [tool.mrs]。

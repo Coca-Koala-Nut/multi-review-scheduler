@@ -1,0 +1,15 @@
+# 所有文本文件强制 LF，跨平台兼容 (EDA 工具多数跑在 Linux)
+* text=auto eol=lf
+*.v     text eol=lf
+*.sv    text eol=lf
+*.vhd   text eol=lf
+*.tcl   text eol=lf
+*.sh    text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.toml  text eol=lf
+*.py    text eol=lf
+Makefile text eol=lf
+LICENSE  text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
