@@ -1,5 +1,26 @@
-# mrs-skill-rtl-analyze（占位骨架）
+# mrs-skill-rtl-analyze
 
-rtl-analyze skill 的占位版本。当前 SKILL.md 为最小占位定义，Claude 能加载但不会执行实质性 RTL 分析。
+`rtl-analyze` skill for [`multi-review-scheduler`](https://pypi.org/project/multi-review-scheduler/)。
 
-真实 skill 文件待后续补充。补充后无需改动其他任何文件——包结构、entry point、安装路径均已就绪。
+RTL 代码评审/分析/逆向文档。
+
+## 安装
+
+```bash
+# 与主包一起装
+pip install multi-review-scheduler[rtl]
+
+# 单独装
+pip install mrs-skill-rtl-analyze
+```
+
+## 用法
+
+```bash
+multi-review-scheduler --workflow rtl-analyze --target rtl/top.sv \
+  --settings ~/.claude/settings.json
+```
+
+## 依赖
+
+- `multi-review-scheduler` 主包

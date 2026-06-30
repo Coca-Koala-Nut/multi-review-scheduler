@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rtl-analyze skill — 读·审·核·写·档 五模式 · 一页纸说明</title>
+<style>
+  :root{
+    --ink:#1f2328; --sub:#57606a; --line:#d0d7de; --bg:#f6f8fa;
+    --mA:#0969da;  /* A 分析 蓝 */
+    --mB:#cf222e;  /* B 评审 红 */
+    --mC:#bf8700;  /* C 核对 金 */
+    --mD:#1a7f37;  /* D 写码 绿 */
+    --mE:#8250df;  /* E 档 紫 */
+    --hi:#bf8700;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       margin:0;padding:28px 40px;color:var(--ink);line-height:1.5;font-size:14px;
+       max-width:1120px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px;}
+  h1 .tag{font-size:13px;color:var(--sub);font-weight:400;margin-left:10px;}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  h2{font-size:16px;margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+  h2 .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;
+        font-size:12px;text-align:center;line-height:22px;font-weight:600;}
+  .grid{display:grid;gap:16px;}
+  .g5{grid-template-columns:repeat(5,1fr);}
+  .g2{grid-template-columns:1fr 1fr;}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 15px;}
+  .card h3{margin:0 0 5px;font-size:14px;display:flex;align-items:center;gap:6px;}
+  .mode-badge{display:inline-block;width:22px;height:22px;border-radius:6px;color:#fff;font-size:13px;
+              font-weight:700;text-align:center;line-height:22px;}
+  .bA{background:var(--mA);} .bB{background:var(--mB);} .bC{background:var(--mC);}
+  .bD{background:var(--mD);} .bE{background:var(--mE);}
+  .dir{font-size:11px;color:var(--sub);font-weight:600;margin:0 0 4px;}
+  .trig{font-size:11.5px;color:var(--ink);margin:0 0 5px;}
+  .trig code{font-size:11px;}
+  .desc{font-size:12px;color:var(--sub);margin:0;}
+  ul{margin:4px 0 0;padding-left:18px;} li{margin:2px 0;}
+  code{background:#eff1f3;padding:.1em .35em;border-radius:4px;font-size:12.5px;
+       font-family:"SFMono-Regular",Consolas,Menlo,monospace;}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-weight:600;color:#fff;}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px;}
+  th,td{border:1px solid var(--line);padding:4px 7px;text-align:left;vertical-align:top;}
+  th{background:#fff;}
+  .kbd{font-family:monospace;background:#eff1f3;border:1px solid var(--line);border-bottom-width:2px;
+       border-radius:4px;padding:1px 6px;font-size:12px;}
+  .foot{margin-top:18px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--sub);}
+  svg{display:block;margin:4px auto 0;}
+  .hl{border-left:4px solid var(--hi);background:#fffdf3;}
+  .sev{font-weight:700;}
+  .eR{color:var(--mB);} .eW{color:#bf8700;} .eN{color:var(--sub);}
+  .skill-badge{display:inline-block;background:var(--ink);color:#fff;font-size:11px;font-weight:700;
+       letter-spacing:.5px;padding:2px 9px;border-radius:5px;vertical-align:middle;margin-right:8px;}
+</style>
+</head>
+<body>
+
+<h1><span class="skill-badge">SKILL</span>rtl-analyze <span class="tag">读·审·核·写·档 五模式 · 内核通用 / 领域可插拔 / 约定按项目加载</span></h1>
+<p class="lead">Claude Code skill：A 读码出报告、B 审码质量、C 核对文档↔代码、D 写码、E 从码逆向生成与维护文档。主框架 ASIC/FPGA 通用，领域专项按项目关键词叠加。触发 <code>/rtl-analyze &lt;路径&gt;</code> 或自然语言含"分析代码/评审代码/写RTL/逆向文档"等关键词；可被其他 skill 经 <code>Skill()</code> 调用。</p>
+
+<h2><span class="n">1</span> 五个模式：按"读/写 × 代码/文档"定位</h2>
+<div class="card">
+  <p style="margin:2px 0 8px;font-size:12.5px;color:var(--sub);">读=读取不改、写=生成修改、—=不涉及。<b>D 是唯一改代码的，E 是唯一改文档的</b>；歧义时默认走 Mode A 并标注，不反问。</p>
+  <table>
+    <tr>
+      <th style="width:11%;">模式</th>
+      <th style="width:21%;">触发词</th>
+      <th style="width:7%;">对代码</th>
+      <th style="width:7%;">对文档</th>
+      <th>功能 & 产出</th>
+    </tr>
+    <tr>
+      <td><span class="mode-badge bA">A</span> 分析</td>
+      <td><code>分析代码</code> / <code>analyze module</code></td>
+      <td>读</td><td>—</td>
+      <td>单模块深度分析：端口/参数/时钟域/复位/FSM/数据通路/寄存器/子模块/Mermaid 图/PPA 估计（A-1~A-12）→ 分析报告</td>
+    </tr>
+    <tr>
+      <td><span class="mode-badge bB">B</span> 评审</td>
+      <td><code>评审代码</code> / <code>code review</code></td>
+      <td>读</td><td>—</td>
+      <td>9 大类审计：编码风格/latch/FSM/时钟复位CDC/综合就绪/结构正确/PPA/DFT/领域专项 → severity 分级清单 + checklist 汇总</td>
+    </tr>
+    <tr>
+      <td><span class="mode-badge bC">C</span> 核对</td>
+      <td><code>评审文档</code> / <code>cross-check doc</code></td>
+      <td>读</td><td>读</td>
+      <td>文档↔RTL 交叉核对 12 类：完整性/信号名/位宽/参数/层次/时钟域/Mermaid 图/FSM/交叉引用/时序协议/死链/文档质量</td>
+    </tr>
+    <tr>
+      <td><span class="mode-badge bD">D</span> 写码</td>
+      <td><code>写代码</code> / <code>write RTL</code> / <code>重构</code></td>
+      <td>写</td><td>—</td>
+      <td>生成/修改/优化/重构 RTL；先 Grep 项目同类模块复用风格 → 可综合代码 + 架构图 + PPA 估计 + 合规清单</td>
+    </tr>
+    <tr>
+      <td><span class="mode-badge bE">E</span> 逆向档</td>
+      <td><code>逆向文档</code> / <code>文档对齐</code> / <code>增量更新文档</code></td>
+      <td>读</td><td>写</td>
+      <td>E-1 逆向补档 / E-2 漂移对齐 / E-3 增量更新（+E-0 共用约束）；只提取代码事实，设计意图标【待确认】交还</td>
+    </tr>
+  </table>
+</div>
+
+<h2><span class="n">2</span> 项目上下文加载 & 领域扩展（可插拔）</h2>
+<div class="grid g2">
+  <div class="card">
+    <h3>约定加载优先级</h3>
+    <ol style="margin:6px 0 0;padding-left:20px;">
+      <li>项目 <code>CLAUDE.md</code> / <code>MEMORY.md</code> / <code>memory/</code> → 复位电平、命名、宏前缀、目标工艺/器件/频率</li>
+      <li>领域关键词命中 → 叠加对应领域扩展检查</li>
+      <li>无约定 → 用 skill 末尾"通用约定默认值"回退</li>
+    </ol>
+    <p class="desc" style="margin-top:8px;">Mode D 写码前另必 <code>Grep</code> 项目同类模块复用风格——搜到复用、搜不到才用通用默认。</p>
+  </div>
+  <div class="card">
+    <h3>五个领域扩展（按关键词命中叠加）</h3>
+    <table>
+      <tr><th>领域</th><th>关键词样例</th></tr>
+      <tr><td>WiFi / 802.11</td><td>PHY、MAC、SIFS</td></tr>
+      <tr><td>视频编解码</td><td>H.264/H.265、CTU、运动估计、CABAC</td></tr>
+      <tr><td>网络 / 通信</td><td>以太网、MAC/PCS、1588、SerDes</td></tr>
+      <tr><td>SoC / 总线</td><td>AXI/AHB/APB、interconnect、UPF、cache coherence</td></tr>
+      <tr><td>AI / NPU 计算</td><td>矩阵乘、systolic、PE 阵列、INT8/FP8 量化</td></tr>
+    </table>
+    <p class="desc" style="margin-top:6px;">多领域命中全部叠加、独立汇报；冲突以项目 CLAUDE.md 显式约定为准，无约定标注交还用户。</p>
+  </div>
+</div>
+
+<h2><span class="n">3</span> 关键约束 & 调用语义</h2>
+<div class="grid" style="grid-template-columns:repeat(2,1fr);">
+  <div class="card hl"><h3>Mode E 事实优先</h3>
+    <p class="desc">只描述代码已实现的事实，设计意图标 <code>【待确认】</code> 交还设计者，绝不编造。</p></div>
+  <div class="card hl"><h3>Mode D 先搜后写</h3>
+    <p class="desc">写码前必须 <code>Grep</code> 项目同类模块；搜到复用风格、搜不到才用通用默认，保证新码融入项目。</p></div>
+  <div class="card hl"><h3>PPA 必先确认工艺/器件</h3>
+    <p class="desc">未指定工艺 → 绝对数值标 <code>@unspecified process</code>，只给相对评估，不报虚假绝对数。</p></div>
+  <div class="card hl"><h3>Skill() 调用语义</h3>
+    <p class="desc">被 ab-review 等通过 <code>Skill()</code> 调用时，args 必含模式关键词；歧义默认走 Mode A 并标注，<b>不反问</b>（保护调用方自动流程）。</p></div>
+  <div class="card hl"><h3>输出语言跟随来源</h3>
+    <p class="desc">用户直接交互 → 跟随 prompt 语言；被 <code>Skill()</code> 调用 → 跟随调用方（ab-review 默认中文，使 B 意见能直接落入 b-round 而不污染下游文档语言）。</p></div>
+  <div class="card hl"><h3>纯规范型，无脚本</h3>
+    <p class="desc">skill 目录仅 SKILL/README/SUMMARY，无脚本依赖；改检查清单/格式后按 SKILL.md 末尾"维护说明"5 步人工回归验证。</p></div>
+</div>
+
+<h2><span class="n">4</span> Mode B 输出：severity 三级分级</h2>
+<div class="card">
+  <table>
+    <tr><th width="14%">等级</th><th width="30%">含义</th><th>处理</th></tr>
+    <tr><td><span class="sev eR">🔴 Errors</span></td><td>必须修复</td><td>signoff 前必改（行号/类别/问题/修法）</td></tr>
+    <tr><td><span class="sev eW">🟠 Warnings</span></td><td>应修复</td><td>可带理由 waive（行号/类别/问题/建议）</td></tr>
+    <tr><td><span class="sev eN">🟡 Notes</span></td><td>信息性</td><td>仅提示（行号/观察）</td></tr>
+  </table>
+  <p class="desc" style="margin-top:6px;">末尾附 Review Checklist Summary（各类 Pass/Fail/N/A 汇总），一眼看出哪类未过。</p>
+</div>
+
+<div class="foot">
+  <b>触发</b>：自然语言含 <code>分析代码/评审代码/评审文档/写RTL/逆向文档</code> 自动路由 &nbsp;|&nbsp;
+  <b>Skill() 调用</b>：<span class="kbd">Skill(skill="rtl-analyze", args="评审代码 rtl/xxx.sv")</span> &nbsp;|&nbsp;
+  <b>被集成</b>：ab-review B 角色用 Mode B/C、A 角色用 Mode E &nbsp;|&nbsp;
+  <b>文件</b>：<code>~/.claude/skills/rtl-analyze/SKILL.md</code>（纯规范型，无脚本依赖）
+</div>
+
+</body>
+</html>
