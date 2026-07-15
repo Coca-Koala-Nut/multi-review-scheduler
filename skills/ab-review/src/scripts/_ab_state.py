@@ -236,11 +236,18 @@ def cmd_finish(args):
 
 def cmd_reset(_args):
     def do():
-        for p in (STATE, LOCK):
-            if p.exists():
-                p.unlink()
+        if STATE.exists():
+            STATE.unlink()
         return {"reset": True}
-    print(json.dumps(_with_lock(do), ensure_ascii=False))
+    result = _with_lock(do)
+    # _with_lock 已关闭 LOCK 的 fd；此时删 LOCK 在 Windows 上也安全
+    try:
+        if LOCK.exists():
+            LOCK.unlink()
+    except PermissionError:
+        # Windows 极端情况：另一个进程还在释放句柄；不影响功能
+        pass
+    print(json.dumps(result, ensure_ascii=False))
 
 
 VALID_OBJECT_TYPES = {"doc", "rtl"}

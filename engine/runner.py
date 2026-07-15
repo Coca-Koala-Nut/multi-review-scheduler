@@ -120,6 +120,8 @@ def _stream_claude(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1,
         cwd=str(cwd) if cwd else None,
         env=env,

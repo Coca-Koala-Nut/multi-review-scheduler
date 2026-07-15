@@ -370,6 +370,18 @@ class ABReviewDriver(WorkflowDriver):
             print("\n[ab-review] 输入中断，按中止处理。", file=sys.stderr)
             raise RuntimeError("pre-check aborted by user (Ctrl+C / EOF)")
 
+    def refresh(self, target: Path, config: dict) -> dict:
+        """重读 state，不触发 auto-reset（auto-reset 仅在首次 init 时生效）。
+
+        refresh 被 runner 每轮调用以获取 claude 子进程更新后的 state；
+        如果走 init 的 auto-reset 路径，则 B 刚写完 verdict=通过 就被
+        reset 覆盖，is_done() 永远看不到已完成状态。
+        """
+        sf = self._state_file(config)
+        if sf.exists():
+            return self._run_unwrap(config, "show")
+        return self.init(target, config)
+
     def next_step(self, state: dict, config: dict) -> Step | None:
         turn = state.get("turn")
         if turn not in ("a", "b"):

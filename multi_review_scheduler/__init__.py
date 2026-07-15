@@ -350,9 +350,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         return run(cfg)
 
-    if shutil.which(args.claude_cmd) is None:
+    resolved_cmd = shutil.which(args.claude_cmd)
+    if resolved_cmd is None:
         print(f"错误: 找不到 Claude Code CLI '{args.claude_cmd}'", file=sys.stderr)
         return 1
+    args.claude_cmd = resolved_cmd  # Windows 下必须用完整路径，否则 CreateProcess 找不到 .CMD
     if not args.target:
         print("错误: 必须指定 --target（或在 [tool.mrs] default_target 里写，或跑 `multi-review-scheduler --ui` 配置）",
               file=sys.stderr)

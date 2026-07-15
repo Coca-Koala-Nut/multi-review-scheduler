@@ -2,6 +2,8 @@
 
 Skill 工作流调度框架，基于 Claude Code CLI。
 
+支持 Linux / Windows。
+
 把 `ab-review` / `rtl-analyze` 等 skill 拆为独立 PyPI 包，通过
 `importlib.metadata.entry_points` 自发现；runner 调 `claude -p` 流式执行。
 
